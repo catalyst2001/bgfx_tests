@@ -8,3 +8,5 @@
 .svn
 .vscode
 tags
+/.build/projects/vs2019/.vs
+/.build/win64_vs2019/obj
