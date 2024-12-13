@@ -135,6 +135,67 @@ public:
 
 class exgui_root;
 
+class exgui_vector2
+{
+public:
+  union {
+    struct { float x, y; };
+    struct { float s, t; };
+    float v[2];
+  };
+  exgui_vector2() : x(0.f), y(0.f) {}
+  exgui_vector2(float xx, float yy) : x(xx), y(yy) {}
+  ~exgui_vector2() {}
+  
+  exgui_vector2 operator=(exgui_vector2& v) { return *this = v; }
+  exgui_vector2 operator+(exgui_vector2& v) { return exgui_vector2(x + v.x, y + v.y); }
+  exgui_vector2 operator-(exgui_vector2& v) { return exgui_vector2(x - v.x, y - v.y); }
+  exgui_vector2 operator*(exgui_vector2& v) { return exgui_vector2(x * v.x, y * v.y); }
+  exgui_vector2 operator/(exgui_vector2& v) { return exgui_vector2(x / v.x, y / v.y); }
+  exgui_vector2 operator+(float v) { return exgui_vector2(x + v, y + v); }
+  exgui_vector2 operator-(float v) { return exgui_vector2(x - v, y - v); }
+  exgui_vector2 operator*(float v) { return exgui_vector2(x * v, y * v); }
+  exgui_vector2 operator/(float v) { return exgui_vector2(x / v, y / v); }
+  exgui_vector2 operator+=(exgui_vector2& v) { x += v.x; y += v.y; return *this; }
+  exgui_vector2 operator-=(exgui_vector2& v) { x -= v.x; y -= v.y; return *this; }
+  exgui_vector2 operator*=(exgui_vector2& v) { x *= v.x; y *= v.y; return *this; }
+  exgui_vector2 operator/=(exgui_vector2& v) { x /= v.x; y /= v.y; return *this; }
+  exgui_vector2 operator*=(float v) { x *= v; y *= v; return *this; }
+  exgui_vector2 operator/=(float v) { x /= v; y /= v; return *this; }
+  exgui_vector2 operator+=(float v) { x += v; y += v; return *this; }
+  exgui_vector2 operator-=(float v) { x -= v; y -= v; return *this; }
+};
+
+class exgui_vector3
+{
+public:
+  union {
+    struct { float x, y, z; };
+    float v[3];
+  };
+  exgui_vector3() : x(0.f), y(0.f), y(0.f) {}
+  exgui_vector3(float xx, float yy, float zz) : x(xx), y(yy), z(zz) {}
+  ~exgui_vector3() {}
+
+  exgui_vector3 operator=(exgui_vector3& v) { return *this = v; }
+  exgui_vector3 operator+(exgui_vector3& v) { return exgui_vector3(x + v.x, y + v.y, z + v.z); }
+  exgui_vector3 operator-(exgui_vector3& v) { return exgui_vector3(x - v.x, y - v.y, z - v.z); }
+  exgui_vector3 operator*(exgui_vector3& v) { return exgui_vector3(x * v.x, y * v.y, z * v.z); }
+  exgui_vector3 operator/(exgui_vector3& v) { return exgui_vector3(x / v.x, y / v.y, z / v.z); }
+  exgui_vector3 operator+(float v) { return exgui_vector3(x + v, y + v, z + v); }
+  exgui_vector3 operator-(float v) { return exgui_vector3(x - v, y - v, z - v); }
+  exgui_vector3 operator*(float v) { return exgui_vector3(x * v, y * v, z * v); }
+  exgui_vector3 operator/(float v) { return exgui_vector3(x / v, y / v, z / v); }
+  exgui_vector3 operator+=(exgui_vector3& v) { x += v.x; y += v.y; z += v.z; return *this; }
+  exgui_vector3 operator-=(exgui_vector3& v) { x -= v.x; y -= v.y; z -= v.z; return *this; }
+  exgui_vector3 operator*=(exgui_vector3& v) { x *= v.x; y *= v.y; z *= v.z; return *this; }
+  exgui_vector3 operator/=(exgui_vector3& v) { x /= v.x; y /= v.y; z /= v.z; return *this; }
+  exgui_vector3 operator*=(float v) { x *= v; y *= v; z *= v; return *this; }
+  exgui_vector3 operator/=(float v) { x /= v; y /= v; z /= v; return *this; }
+  exgui_vector3 operator+=(float v) { x += v; y += v; z += v; return *this; }
+  exgui_vector3 operator-=(float v) { x -= v; y -= v; z -= v; return *this; }
+};
+
 class exgui_base : protected iexgui_element
 {
   /* allow exgui_root class to call iexgui_element vmethods */
@@ -163,18 +224,18 @@ protected:
 
   inline exgui_base* get_root() { return m_proot; }
 
-  /* exgui_root::rebuild_draw_cache accessor class */
-  class exgui_root_update_acessor : public exgui_root {
-  public:
-    exgui_root_update_acessor() {}
-    ~exgui_root_update_acessor() {}
-    inline void rebuild_draw_cache() {
-      exgui_root::rebuild_draw_cache();
-    }
-  };
+  ///* exgui_root::rebuild_draw_cache accessor class */
+  //class exgui_root_update_acessor : public exgui_root {
+  //public:
+  //  exgui_root_update_acessor() {}
+  //  ~exgui_root_update_acessor() {}
+  //  inline void rebuild_draw_cache() {
+  //    exgui_root::rebuild_draw_cache();
+  //  }
+  //};
 
   /* perform update root draw cache */
-  inline void root_update() { ((exgui_root_update_acessor *)m_proot)->rebuild_draw_cache(); }
+  inline void root_update() { ((exgui_root *)m_proot)->rebuild_draw_cache(); }
 
 public:
   void set_classname(const char* p_clsn) {
@@ -251,7 +312,8 @@ class exgui_root : public exgui_base
     EXGUI_KEY_STATE state, int x, int y);
 
   /* access is open for inheritance (exgui_root::rebuild_draw_cache accessor class ) */
-protected:
+//protected:
+public:
   inline void rebuild_draw_cache();
 
 public:

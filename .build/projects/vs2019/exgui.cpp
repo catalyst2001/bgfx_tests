@@ -89,11 +89,11 @@ void exgui_root::rebuild_draw_cache()
 
 void exgui_root::draw()
 {
-  nvgBeginFrame();
+  nvgBeginFrame(m_pctx, );
   for (size_t i = 0; i < m_draw_cache.size(); i++) {
-    m_draw_cache[i]->on_draw();
+    m_draw_cache[i]->on_draw(m_pctx);
   }
-  nvgEndFrame();
+  nvgEndFrame(m_pctx);
 }
 
 exgui_root::exgui_root() : exgui_base(nullptr, "ui_root_node")
