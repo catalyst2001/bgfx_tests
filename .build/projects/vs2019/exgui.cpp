@@ -50,6 +50,20 @@ void exgui_root::event_dispatcher(exgui_base* p_elem)
 {
 }
 
+void exgui_root::keybd_dispatcher(exgui_base* p_elem, int sc, EXGUI_KEY vk, EXGUI_KEY_STATE state)
+{
+  /* add element to draw path container */
+  p_elem->on_keybd(sc, vk, state);
+  /* element has childs? */
+  if (p_elem->get_elem_flags().has_childs() && p_elem->get_elem_flags().has_notify_childs()) {
+    /* recursive enum childs */
+    for (size_t i = 0; i < p_elem->get_num_childs(); i++) {
+      /* enter recursively */
+      keybd_dispatcher(p_elem->get_child(i), sc, vk, state);
+    }
+  }
+}
+
 void exgui_root::build_draw_cache_recursive(exgui_base* p_elem)
 {
   /* is visible? */

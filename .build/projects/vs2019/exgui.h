@@ -240,8 +240,7 @@ class exgui_root : public exgui_base
   NVGcontext      *m_pctx;
 
   void        build_draw_cache_recursive(exgui_base *p_elem);
-  
- 
+
   /* event notifier functions */
   static void event_dispatcher(exgui_base *p_elem);
   static void keybd_dispatcher(exgui_base *p_elem, int sc, 
