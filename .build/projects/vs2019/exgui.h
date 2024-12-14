@@ -11,22 +11,31 @@
 #include "nanovg/nanovg.h"
 #include <vector>
 #include <string>
+#include <cassert>
 
+/* utils */
+#define EXGUI_COUNTOF(x) (sizeof(x) / sizeof(x[0]))
+#define EXGUI_UNUSED(x) (void)(x)
+
+/* virtual keys */
 enum EXGUI_KEY : uint32_t {
 
 };
 
+/* key state */
 enum EXGUI_KEY_STATE : uint32_t {
   DOWN = 0,
   UP,
   REPEAT
 };
 
+/* mouse events */
 enum EXGUI_MOUSE_EVENT : uint32_t {
   EXGUI_MOUSE_EVENT_MOVE = 0,
   EXGUI_MOUSE_EVENT_CLICK
 };
 
+/* node event */
 enum EXGUI_EVENT : uint32_t {
   PARENT_CHANGED = 0,
   PARENT_RESIZE,
@@ -47,6 +56,7 @@ enum EXGUI_EVENT : uint32_t {
 #define EXGUI_FLAG_FOCUSED       (1 << 8)
 #define EXGUI_FLAG_DEFAULT       (EXGUI_FLAG_VISIBLE|EXGUI_FLAG_ACTIVE|EXGUI_FLAG_NOTIFY_CHILDS|EXGUI_FLAG_HAS_SYM|EXGUI_FLAG_HAS_KEYBD|EXGUI_FLAG_HAS_MOUSE|EXGUI_FLAG_HAS_CHILDS)
 
+/* flags base class */
 class exgui_flags
 {
   uint32_t m_flags;
@@ -91,6 +101,7 @@ public:
   }
 };
 
+/* clipboard data types */
 enum EXGUI_CB_DATA_TYPE : uint32_t {
   EXGUI_CLIPBOARD_DATA_TYPE_NONE = 0,
   EXGUI_CLIPBOARD_DATA_TYPE_BIN,
@@ -140,30 +151,81 @@ class exgui_vector2
 public:
   union {
     struct { float x, y; };
-    struct { float s, t; };
     float v[2];
   };
   exgui_vector2() : x(0.f), y(0.f) {}
   exgui_vector2(float xx, float yy) : x(xx), y(yy) {}
   ~exgui_vector2() {}
   
-  exgui_vector2 operator=(exgui_vector2& v) { return *this = v; }
-  exgui_vector2 operator+(exgui_vector2& v) { return exgui_vector2(x + v.x, y + v.y); }
-  exgui_vector2 operator-(exgui_vector2& v) { return exgui_vector2(x - v.x, y - v.y); }
-  exgui_vector2 operator*(exgui_vector2& v) { return exgui_vector2(x * v.x, y * v.y); }
-  exgui_vector2 operator/(exgui_vector2& v) { return exgui_vector2(x / v.x, y / v.y); }
-  exgui_vector2 operator+(float v) { return exgui_vector2(x + v, y + v); }
-  exgui_vector2 operator-(float v) { return exgui_vector2(x - v, y - v); }
-  exgui_vector2 operator*(float v) { return exgui_vector2(x * v, y * v); }
-  exgui_vector2 operator/(float v) { return exgui_vector2(x / v, y / v); }
-  exgui_vector2 operator+=(exgui_vector2& v) { x += v.x; y += v.y; return *this; }
-  exgui_vector2 operator-=(exgui_vector2& v) { x -= v.x; y -= v.y; return *this; }
-  exgui_vector2 operator*=(exgui_vector2& v) { x *= v.x; y *= v.y; return *this; }
-  exgui_vector2 operator/=(exgui_vector2& v) { x /= v.x; y /= v.y; return *this; }
-  exgui_vector2 operator*=(float v) { x *= v; y *= v; return *this; }
-  exgui_vector2 operator/=(float v) { x /= v; y /= v; return *this; }
-  exgui_vector2 operator+=(float v) { x += v; y += v; return *this; }
-  exgui_vector2 operator-=(float v) { x -= v; y -= v; return *this; }
+  inline exgui_vector2 operator=(exgui_vector2& vec) { return *this = vec; }
+  inline exgui_vector2 operator+(exgui_vector2& vec) { return exgui_vector2(x + vec.x, y + vec.y); }
+  inline exgui_vector2 operator-(exgui_vector2& vec) { return exgui_vector2(x - vec.x, y - vec.y); }
+  inline exgui_vector2 operator*(exgui_vector2& vec) { return exgui_vector2(x * vec.x, y * vec.y); }
+  inline exgui_vector2 operator/(exgui_vector2& vec) { return exgui_vector2(x / vec.x, y / vec.y); }
+  inline exgui_vector2 operator+(float s) { return exgui_vector2(x + s, y + s); }
+  inline exgui_vector2 operator-(float s) { return exgui_vector2(x - s, y - s); }
+  inline exgui_vector2 operator*(float s) { return exgui_vector2(x * s, y * s); }
+  inline exgui_vector2 operator/(float s) { return exgui_vector2(x / s, y / s); }
+  inline exgui_vector2 operator+=(exgui_vector2& vec) { x += vec.x; y += vec.y; return *this; }
+  inline exgui_vector2 operator-=(exgui_vector2& vec) { x -= vec.x; y -= vec.y; return *this; }
+  inline exgui_vector2 operator*=(exgui_vector2& vec) { x *= vec.x; y *= vec.y; return *this; }
+  inline exgui_vector2 operator/=(exgui_vector2& vec) { x /= vec.x; y /= vec.y; return *this; }
+  inline exgui_vector2 operator*=(float s) { x *= s; y *= s; return *this; }
+  inline exgui_vector2 operator/=(float s) { x /= s; y /= s; return *this; }
+  inline exgui_vector2 operator+=(float s) { x += s; y += s; return *this; }
+  inline exgui_vector2 operator-=(float s) { x -= s; y -= s; return *this; }
+
+  inline bool compare_strong(exgui_vector2& vec) { return x == vec.x && y == vec.y; }
+  inline bool operator==(exgui_vector2& vec) { return fabsf(x - vec.x) < FLT_EPSILON && fabsf(y - vec.y) < FLT_EPSILON; }
+  inline bool operator!=(exgui_vector2& vec) { return fabsf(x - vec.x) >= FLT_EPSILON && fabsf(y - vec.y) >= FLT_EPSILON; }
+  inline bool operator<(exgui_vector2& vec) { return x < vec.x && y < vec.y; }
+  inline bool operator<=(exgui_vector2& vec) { return x <= vec.x && y <= vec.y; }
+  inline bool operator>(exgui_vector2& vec) { return x > vec.x && y > vec.y; }
+  inline bool operator>=(exgui_vector2& vec) { return x >= vec.x && y >= vec.y; }
+  inline float operator[](int idx) { assert(idx < EXGUI_COUNTOF(v) && "index out of bounds"); return v[idx]; }
+};
+
+class exgui_rect
+{
+public:
+  union {
+    struct { float left, top, right, bottom; };
+    struct { float v[4]; };
+  };
+  exgui_rect() {}
+  exgui_rect(exgui_rect& rect) { *this = rect; }
+  exgui_rect(float x, float y, float w, float h) : left(x), top(y), right(w), bottom(h) {}
+  exgui_rect(int x, int y, int w, int h) : left((float)x), top((float)y), right((float)w), bottom((float)h) {}
+  ~exgui_rect() {}
+
+  inline float operator[](int idx) { assert(idx < EXGUI_COUNTOF(v) && "index out of bounds"); return v[idx]; }
+};
+
+/* undef min/max if defined macro */
+#ifdef min
+#undef min
+#endif
+#ifdef max
+#undef max
+#endif
+
+class exgui_bbox
+{
+public:
+  exgui_vector2 min, max;
+  exgui_bbox() {}
+  ~exgui_bbox() {}
+
+  inline bool inside(exgui_vector2& pt) {
+    return min <= pt && pt <= max;
+  }
+
+  inline void from_rect(exgui_rect &rect) {
+    min.x = rect.left;
+    min.y = rect.top;
+    max.x = min.x + rect.right;
+    max.y = min.y + rect.bottom;
+  }
 };
 
 class exgui_vector3
@@ -173,27 +235,28 @@ public:
     struct { float x, y, z; };
     float v[3];
   };
-  exgui_vector3() : x(0.f), y(0.f), y(0.f) {}
+  exgui_vector3() : x(0.f), y(0.f), z(0.f) {}
   exgui_vector3(float xx, float yy, float zz) : x(xx), y(yy), z(zz) {}
   ~exgui_vector3() {}
 
-  exgui_vector3 operator=(exgui_vector3& v) { return *this = v; }
-  exgui_vector3 operator+(exgui_vector3& v) { return exgui_vector3(x + v.x, y + v.y, z + v.z); }
-  exgui_vector3 operator-(exgui_vector3& v) { return exgui_vector3(x - v.x, y - v.y, z - v.z); }
-  exgui_vector3 operator*(exgui_vector3& v) { return exgui_vector3(x * v.x, y * v.y, z * v.z); }
-  exgui_vector3 operator/(exgui_vector3& v) { return exgui_vector3(x / v.x, y / v.y, z / v.z); }
-  exgui_vector3 operator+(float v) { return exgui_vector3(x + v, y + v, z + v); }
-  exgui_vector3 operator-(float v) { return exgui_vector3(x - v, y - v, z - v); }
-  exgui_vector3 operator*(float v) { return exgui_vector3(x * v, y * v, z * v); }
-  exgui_vector3 operator/(float v) { return exgui_vector3(x / v, y / v, z / v); }
-  exgui_vector3 operator+=(exgui_vector3& v) { x += v.x; y += v.y; z += v.z; return *this; }
-  exgui_vector3 operator-=(exgui_vector3& v) { x -= v.x; y -= v.y; z -= v.z; return *this; }
-  exgui_vector3 operator*=(exgui_vector3& v) { x *= v.x; y *= v.y; z *= v.z; return *this; }
-  exgui_vector3 operator/=(exgui_vector3& v) { x /= v.x; y /= v.y; z /= v.z; return *this; }
-  exgui_vector3 operator*=(float v) { x *= v; y *= v; z *= v; return *this; }
-  exgui_vector3 operator/=(float v) { x /= v; y /= v; z /= v; return *this; }
-  exgui_vector3 operator+=(float v) { x += v; y += v; z += v; return *this; }
-  exgui_vector3 operator-=(float v) { x -= v; y -= v; z -= v; return *this; }
+  exgui_vector3 operator=(exgui_vector3& vec) { return *this = vec; }
+  exgui_vector3 operator+(exgui_vector3& vec) { return exgui_vector3(x + vec.x, y + vec.y, z + vec.z); }
+  exgui_vector3 operator-(exgui_vector3& vec) { return exgui_vector3(x - vec.x, y - vec.y, z - vec.z); }
+  exgui_vector3 operator*(exgui_vector3& vec) { return exgui_vector3(x * vec.x, y * vec.y, z * vec.z); }
+  exgui_vector3 operator/(exgui_vector3& vec) { return exgui_vector3(x / vec.x, y / vec.y, z / vec.z); }
+  exgui_vector3 operator+(float s) { return exgui_vector3(x + s, y + s, z + s); }
+  exgui_vector3 operator-(float s) { return exgui_vector3(x - s, y - s, z - s); }
+  exgui_vector3 operator*(float s) { return exgui_vector3(x * s, y * s, z * s); }
+  exgui_vector3 operator/(float s) { return exgui_vector3(x / s, y / s, z / s); }
+  exgui_vector3 operator+=(exgui_vector3& vec) { x += vec.x; y += vec.y; z += vec.z; return *this; }
+  exgui_vector3 operator-=(exgui_vector3& vec) { x -= vec.x; y -= vec.y; z -= vec.z; return *this; }
+  exgui_vector3 operator*=(exgui_vector3& vec) { x *= vec.x; y *= vec.y; z *= vec.z; return *this; }
+  exgui_vector3 operator/=(exgui_vector3& vec) { x /= vec.x; y /= vec.y; z /= vec.z; return *this; }
+  exgui_vector3 operator*=(float s) { x *= s; y *= s; z *= s; return *this; }
+  exgui_vector3 operator/=(float s) { x /= s; y /= s; z /= s; return *this; }
+  exgui_vector3 operator+=(float s) { x += s; y += s; z += s; return *this; }
+  exgui_vector3 operator-=(float s) { x -= s; y -= s; z -= s; return *this; }
+  float         operator[](int idx) { assert(idx < EXGUI_COUNTOF(v) && "index out of bounds"); return v[idx]; }
 };
 
 class exgui_base : protected iexgui_element
@@ -204,11 +267,17 @@ class exgui_base : protected iexgui_element
 
 protected:
   /* iexgui_element empty impls */
-  virtual bool on_event(EXGUI_EVENT event) {}
-  virtual void on_draw(NVGcontext* p_ctx) {}
-  virtual void on_keybd(int sc, EXGUI_KEY vk, EXGUI_KEY_STATE state) {}
-  virtual void on_text_input(int sym) {}
-  virtual void on_mouse(EXGUI_MOUSE_EVENT event, EXGUI_KEY vk, EXGUI_KEY_STATE state, int x, int y) {}
+  virtual bool on_event(EXGUI_EVENT event) { EXGUI_UNUSED(event); }
+  virtual void on_draw(NVGcontext* p_ctx) { EXGUI_UNUSED(p_ctx); }
+  virtual void on_keybd(int sc, EXGUI_KEY vk, EXGUI_KEY_STATE state) { EXGUI_UNUSED(sc); EXGUI_UNUSED(vk); EXGUI_UNUSED(state); }
+  virtual void on_text_input(int sym) { EXGUI_UNUSED(sym); }
+  virtual void on_mouse(EXGUI_MOUSE_EVENT event, EXGUI_KEY vk, EXGUI_KEY_STATE state, int x, int y) {
+    EXGUI_UNUSED(event);
+    EXGUI_UNUSED(vk);
+    EXGUI_UNUSED(state);
+    EXGUI_UNUSED(x);
+    EXGUI_UNUSED(y);
+  }
 
 protected:
   using _childs_vec = std::vector<exgui_base*>;
@@ -221,6 +290,8 @@ protected:
   uint32_t         m_user_flags;
   int              m_font_id;
   char             m_szclass[32];
+  exgui_bbox       m_bbox;
+  exgui_rect       m_rect;
 
   inline exgui_base* get_root() { return m_proot; }
 
@@ -242,7 +313,7 @@ public:
     strncpy(m_szclass, p_clsn, sizeof(m_szclass) - 1);
   }
 
-  exgui_base(exgui_base *p_parent, const char *p_classname,
+  exgui_base(int x, int y, int width, int height, exgui_base *p_parent, const char *p_classname,
     uint32_t flags = EXGUI_FLAG_DEFAULT, 
     uint32_t uflags = 0, void *p_userptr = nullptr) : m_proot(nullptr),
     m_pparent(nullptr), m_puserptr(nullptr), m_psysdf(nullptr) {
@@ -250,6 +321,8 @@ public:
     m_puserptr = p_userptr;
     m_elem_flags = flags;
     m_user_flags = uflags;
+    m_rect = exgui_rect(x, y, width, height);
+    m_bbox.from_rect(m_rect);
 
     /* have parent? */
     if (p_parent)
@@ -317,7 +390,7 @@ public:
   inline void rebuild_draw_cache();
 
 public:
-  exgui_root();
+  exgui_root(NVGcontext *p_ctx, int width, int height);
   ~exgui_root();
 
   /* main events */

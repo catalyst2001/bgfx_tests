@@ -52,7 +52,6 @@ void exgui_root::event_dispatcher(exgui_base* p_elem)
 
 void exgui_root::keybd_dispatcher(exgui_base* p_elem, int sc, EXGUI_KEY vk, EXGUI_KEY_STATE state)
 {
-  /* add element to draw path container */
   p_elem->on_keybd(sc, vk, state);
   /* element has childs? */
   if (p_elem->get_elem_flags().has_childs() && p_elem->get_elem_flags().has_notify_childs()) {
@@ -60,6 +59,32 @@ void exgui_root::keybd_dispatcher(exgui_base* p_elem, int sc, EXGUI_KEY vk, EXGU
     for (size_t i = 0; i < p_elem->get_num_childs(); i++) {
       /* enter recursively */
       keybd_dispatcher(p_elem->get_child(i), sc, vk, state);
+    }
+  }
+}
+
+void exgui_root::text_input_dispatcher(exgui_base* p_elem, int sym)
+{
+  p_elem->on_text_input(sym);
+  /* element has childs? */
+  if (p_elem->get_elem_flags().has_childs() && p_elem->get_elem_flags().has_notify_childs()) {
+    /* recursive enum childs */
+    for (size_t i = 0; i < p_elem->get_num_childs(); i++) {
+      /* enter recursively */
+      text_input_dispatcher(p_elem->get_child(i), sym);
+    }
+  }
+}
+
+void exgui_root::mouse_dispatcher(exgui_base* p_elem, EXGUI_MOUSE_EVENT event, EXGUI_KEY vk, EXGUI_KEY_STATE state, int x, int y)
+{
+  p_elem->on_mouse(event, vk, state, x, y);
+  /* element has childs? */
+  if (p_elem->get_elem_flags().has_childs() && p_elem->get_elem_flags().has_notify_childs()) {
+    /* recursive enum childs */
+    for (size_t i = 0; i < p_elem->get_num_childs(); i++) {
+      /* enter recursively */
+      mouse_dispatcher(p_elem->get_child(i), event, vk, state, x, y);
     }
   }
 }
@@ -89,16 +114,17 @@ void exgui_root::rebuild_draw_cache()
 
 void exgui_root::draw()
 {
-  nvgBeginFrame(m_pctx, );
+  nvgBeginFrame(m_pctx, m_rect.right, m_rect.bottom, 1.f);
   for (size_t i = 0; i < m_draw_cache.size(); i++) {
     m_draw_cache[i]->on_draw(m_pctx);
   }
   nvgEndFrame(m_pctx);
 }
 
-exgui_root::exgui_root() : exgui_base(nullptr, "ui_root_node")
+exgui_root::exgui_root(NVGcontext* p_ctx, int width, int height) : exgui_base(0, 0, width, height, nullptr, "ui_root_node")
 {
   set_root(this);
+  m_pctx = p_ctx;
 }
 
 exgui_root::~exgui_root()
