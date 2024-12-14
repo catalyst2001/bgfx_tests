@@ -1,12 +1,27 @@
 /**
+* MIT License
 * Copyright (c) 2024. Kirill Deryabin  kd@allalg.org
 * 
 * Retained Mode GUI (RmGUI)
 * 
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
 * 
+* The above copyright notice and this permission notice shall be included in all
+* copies or substantial portions of the Software.
 * 
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+* SOFTWARE.
 */
-
 #pragma once
 #include "nanovg/nanovg.h"
 #include <vector>
@@ -79,7 +94,7 @@ public:
 class exgui_flags_elem : public exgui_flags
 {
   /* allow exgui_root class modify flags */
-  friend class exgui_root;
+  friend class exgui_surface;
 public:
   exgui_flags_elem() : exgui_flags(EXGUI_FLAG_DEFAULT) {}
   ~exgui_flags_elem() {}
@@ -127,11 +142,11 @@ public:
 /**
 * GUI element abstract class
 */
-class iexgui_element
+class iexgui_widget
 {
 public:
-  virtual     ~iexgui_element() = 0;
-  virtual bool on_event(EXGUI_EVENT event) = 0;
+  virtual     ~iexgui_widget() = 0;
+  virtual bool on_event(EXGUI_EVENT event, exgui_widget *p_from) = 0;
   virtual void on_draw(NVGcontext* p_ctx) = 0;
   virtual void on_keybd(int sc, EXGUI_KEY vk, EXGUI_KEY_STATE state) = 0;
   virtual void on_text_input(int sym) = 0;
@@ -144,7 +159,7 @@ public:
 * base class for all GUI elements
 */
 
-class exgui_root;
+class exgui_surface;
 
 class exgui_vector2
 {
@@ -259,18 +274,29 @@ public:
   float         operator[](int idx) { assert(idx < EXGUI_COUNTOF(v) && "index out of bounds"); return v[idx]; }
 };
 
-class exgui_base : protected iexgui_element
+class exgui_widget : protected iexgui_widget
 {
   /* allow exgui_root class to call iexgui_element vmethods */
-  friend class exgui_root;
-  inline void set_root(exgui_base* p_root) { m_proot = p_root; }
+  friend class exgui_surface;
+  inline void set_root(exgui_widget* p_root) { m_proot = p_root; }
 
 protected:
   /* iexgui_element empty impls */
-  virtual bool on_event(EXGUI_EVENT event) { EXGUI_UNUSED(event); }
-  virtual void on_draw(NVGcontext* p_ctx) { EXGUI_UNUSED(p_ctx); }
-  virtual void on_keybd(int sc, EXGUI_KEY vk, EXGUI_KEY_STATE state) { EXGUI_UNUSED(sc); EXGUI_UNUSED(vk); EXGUI_UNUSED(state); }
-  virtual void on_text_input(int sym) { EXGUI_UNUSED(sym); }
+  virtual bool on_event(EXGUI_EVENT event, exgui_widget *p_from) {
+    EXGUI_UNUSED(event);
+    EXGUI_UNUSED(p_from);
+  }
+  virtual void on_draw(NVGcontext* p_ctx) {
+    EXGUI_UNUSED(p_ctx);
+  }
+  virtual void on_keybd(int sc, EXGUI_KEY vk, EXGUI_KEY_STATE state) {
+    EXGUI_UNUSED(sc);
+    EXGUI_UNUSED(vk);
+    EXGUI_UNUSED(state);
+  }
+  virtual void on_text_input(int sym) {
+    EXGUI_UNUSED(sym);
+  }
   virtual void on_mouse(EXGUI_MOUSE_EVENT event, EXGUI_KEY vk, EXGUI_KEY_STATE state, int x, int y) {
     EXGUI_UNUSED(event);
     EXGUI_UNUSED(vk);
@@ -280,10 +306,10 @@ protected:
   }
 
 protected:
-  using _childs_vec = std::vector<exgui_base*>;
+  using _childs_vec = std::vector<exgui_widget*>;
   _childs_vec      m_childs;
-  exgui_base      *m_proot;
-  exgui_base      *m_pparent;
+  exgui_widget    *m_proot;
+  exgui_widget    *m_pparent;
   void            *m_puserptr;
   iexgui_sysdf    *m_psysdf;
   exgui_flags_elem m_elem_flags;
@@ -293,7 +319,7 @@ protected:
   exgui_bbox       m_bbox;
   exgui_rect       m_rect;
 
-  inline exgui_base* get_root() { return m_proot; }
+  inline exgui_widget* get_root() { return m_proot; }
 
   ///* exgui_root::rebuild_draw_cache accessor class */
   //class exgui_root_update_acessor : public exgui_root {
@@ -306,14 +332,14 @@ protected:
   //};
 
   /* perform update root draw cache */
-  inline void root_update() { ((exgui_root *)m_proot)->rebuild_draw_cache(); }
+  inline void root_update() { ((exgui_surface *)m_proot)->rebuild_draw_cache(); }
 
 public:
   void set_classname(const char* p_clsn) {
     strncpy(m_szclass, p_clsn, sizeof(m_szclass) - 1);
   }
 
-  exgui_base(int x, int y, int width, int height, exgui_base *p_parent, const char *p_classname,
+  exgui_widget(int x, int y, int width, int height, exgui_widget *p_parent, const char *p_classname,
     uint32_t flags = EXGUI_FLAG_DEFAULT, 
     uint32_t uflags = 0, void *p_userptr = nullptr) : m_proot(nullptr),
     m_pparent(nullptr), m_puserptr(nullptr), m_psysdf(nullptr) {
@@ -338,49 +364,53 @@ public:
 
     set_classname(p_classname);
   }
-  ~exgui_base() {}
+  ~exgui_widget() {}
 
-  inline const char   *get_classname() { return m_szclass; }
-  inline void         *get_userptr() { return m_puserptr; }
-  inline void          set_userptr(void* p) { m_puserptr = p; }
+  inline const char    *get_classname() { return m_szclass; }
+  inline void          *get_userptr() { return m_puserptr; }
+  inline void           set_userptr(void* p) { m_puserptr = p; }
+
+  /* rect && bbox */
+  inline const exgui_bbox& get_bbox() const { return m_bbox; }
+  inline const exgui_rect& get_rect() const { return m_rect; }
 
   /* childs */
-  inline size_t        get_num_childs() { return m_childs.size(); }
-  inline exgui_base*   get_child(size_t idx) { return m_childs[idx]; }
-  inline exgui_base**  get_all_childs() { return m_childs.data(); }
-  bool                 add_child(exgui_base* p_child);
-  bool                 remove_child(exgui_base* p_child);
+  inline size_t         get_num_childs() { return m_childs.size(); }
+  inline exgui_widget*  get_child(size_t idx) { return m_childs[idx]; }
+  inline const exgui_widget** get_all_childs() { return m_childs.data(); }
+  bool                  add_child(exgui_widget* p_child);
+  bool                  remove_child(exgui_widget* p_child);
 
   /* parent */
-  inline exgui_base   *get_parent() { return m_pparent; }
-  void                 set_parent(exgui_base* p_parent);
+  inline exgui_widget  *get_parent() { return m_pparent; }
+  void                  set_parent(exgui_widget* p_parent);
 
   /* flags */
   inline exgui_flags_elem get_elem_flags() { return m_elem_flags; }
-  inline uint32_t      get_user_flags() { return m_user_flags; }
+  inline uint32_t       get_user_flags() { return m_user_flags; }
 
   /* system dependend functions interface */
-  inline iexgui_sysdf* get_sysdf() { return m_psysdf; }
+  inline iexgui_sysdf  *get_sysdf() { return m_psysdf; }
 
   /* font */
-  inline void          set_font(int font) { m_font_id = font; }
-  inline int           get_font() { return m_font_id; }
+  inline void           set_font(int font) { m_font_id = font; }
+  inline int            get_font() { return m_font_id; }
 };
 
-class exgui_root : public exgui_base
+class exgui_surface : public exgui_widget
 {
-  using exgui_draw_cache = std::vector<exgui_base*>;
+  using exgui_draw_cache = std::vector<exgui_widget*>;
   exgui_draw_cache m_draw_cache;
   NVGcontext      *m_pctx;
 
-  void        build_draw_cache_recursive(exgui_base *p_elem);
+  void        build_draw_cache_recursive(exgui_widget *p_elem);
 
   /* event notifier functions */
-  static void event_dispatcher(exgui_base *p_elem);
-  static void keybd_dispatcher(exgui_base *p_elem, int sc, 
+  static void event_dispatcher(exgui_widget *p_elem);
+  static void keybd_dispatcher(exgui_widget *p_elem, int sc, 
     EXGUI_KEY vk, EXGUI_KEY_STATE state);
-  static void text_input_dispatcher(exgui_base *p_elem, int sym);
-  static void mouse_dispatcher(exgui_base *p_elem, 
+  static void text_input_dispatcher(exgui_widget *p_elem, int sym);
+  static void mouse_dispatcher(exgui_widget *p_elem, 
     EXGUI_MOUSE_EVENT event, EXGUI_KEY vk, 
     EXGUI_KEY_STATE state, int x, int y);
 
@@ -390,13 +420,101 @@ public:
   inline void rebuild_draw_cache();
 
 public:
-  exgui_root(NVGcontext *p_ctx, int width, int height);
-  ~exgui_root();
+  exgui_surface(NVGcontext *p_ctx, int width, int height);
+  ~exgui_surface();
 
   /* main events */
   void draw();
-
-
-
+  void keybd(int sc, EXGUI_KEY vk, EXGUI_KEY_STATE state);
+  void textinput(int sym);
+  void mouse(EXGUI_MOUSE_EVENT event, EXGUI_KEY vk, EXGUI_KEY_STATE state, int x, int y);
 };
 
+
+/*
+===========================================================================================
+ DEFAULT WIDGETS HERE
+===========================================================================================
+*/
+
+/**
+* style base class
+*/
+class exgui_style_base
+{
+public:
+  exgui_style_base() {}
+  ~exgui_style_base() {}
+};
+
+/**
+* styled widget base class
+*/
+template<class _dst_style_type>
+class exgui_styled
+{
+  exgui_style_base* m_pstyle;
+public:
+  exgui_styled(exgui_style_base *p_default_style) : m_pstyle(p_default_style) {}
+  ~exgui_styled() {}
+
+  inline _dst_style_type* get_style() { return reinterpret_cast<_dst_style_type*>(m_pstyle); }
+  inline void             set_style(exgui_style_base* p_style) { m_pstyle = p_style; }
+};
+
+enum EXGUI_CORNER : uint32_t {
+  LEFT_TOP = 0,
+  RIGHT_TOP,
+  RIGHT_BOTTOM,
+  LEFT_BOTTOM,
+
+  EXGUI_NUM_CORNERS
+};
+
+class exgui_corners_style
+{
+protected:
+  float m_corner_radius[EXGUI_NUM_CORNERS];
+public:
+  exgui_corners_style() {
+    m_corner_radius[LEFT_TOP] = 0.f;
+    m_corner_radius[RIGHT_TOP] = 0.f;
+    m_corner_radius[RIGHT_BOTTOM] = 0.f;
+    m_corner_radius[LEFT_BOTTOM] = 0.f;
+  }
+  ~exgui_corners_style() {}
+
+  inline void  set_corner_radius(EXGUI_CORNER corner, float radius) { m_corner_radius[corner] = radius; }
+  inline float get_corner_radius(EXGUI_CORNER corner) { return m_corner_radius[corner]; }
+};
+
+class exgui_window_style : public exgui_style_base, public exgui_corners_style
+{
+protected:
+  float    m_title_font_size;
+  float    m_title_font_blur_factor;
+  NVGcolor m_title_font_color;
+  NVGcolor m_title_font_shadow_color;
+
+public:
+  inline float    get_font_size() { return m_title_font_size; }
+  inline float    get_font_blur_factor() { return m_title_font_blur_factor; }
+  inline NVGcolor get_font_color() { return m_title_font_color; }
+  inline NVGcolor get_font_shadow_color() { return m_title_font_shadow_color; }
+};
+
+/**
+* Window
+*/
+class exgui_window : public exgui_widget, public exgui_styled<exgui_window_style>
+{
+  exgui_window_style        *m_pstyle;
+  std::vector<exgui_widget*> m_top_widgets;
+
+  /* paint window background */
+  virtual void on_draw(NVGcontext* p_ctx);
+
+public:
+  exgui_window(exgui_widget* p_parent, int x, int y, int width, int height, uint32_t flags = EXGUI_FLAG_DEFAULT, uint32_t uflags = 0, void* p_userptr = nullptr);
+  ~exgui_window();
+};
