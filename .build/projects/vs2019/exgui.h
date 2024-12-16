@@ -183,7 +183,7 @@ enum EXGUI_EVENT : uint32_t {
 #define EXGUI_FLAG_HAS_CHILDS    (1 << 6)
 
 /* special state flags */
-#define EXGUI_FLAG_HOWERED       (1 << 7)
+#define EXGUI_FLAG_HOVERED       (1 << 7)
 #define EXGUI_FLAG_FOCUSED       (1 << 8)
 #define EXGUI_FLAG_DRAGGED       (1 << 9)
 
@@ -231,7 +231,7 @@ public:
   inline bool has_childs() { return is_set(EXGUI_FLAG_HAS_CHILDS); }
 
   /* state flags */
-  inline bool is_howered() { return is_set(EXGUI_FLAG_HOWERED); }
+  inline bool is_hovered() { return is_set(EXGUI_FLAG_HOVERED); }
   inline bool is_focused() { return is_set(EXGUI_FLAG_FOCUSED); }
 
   uint32_t operator=(uint32_t f) {

@@ -82,7 +82,7 @@ void exgui_surface::mouse_dispatcher(exgui_widget* p_elem, EXGUI_MOUSE_EVENT eve
 {
   /* cursor is focused? */
   bool b_cursor_inside = p_elem->get_bbox().inside(cursor_pos);
-  p_elem->m_elem_flags.toggle_bits(EXGUI_FLAG_HOWERED, b_cursor_inside);
+  p_elem->m_elem_flags.toggle_bits(EXGUI_FLAG_HOVERED, b_cursor_inside);
 
   /* cursor inside of widget? */
   if (b_cursor_inside) {
@@ -184,7 +184,7 @@ void exgui_window::on_draw(NVGcontext* p_ctx)
   nvgSave(p_ctx);
   exgui_window_style* p_style = get_style();
   assert(p_style && "exgui_window::on_draw(): window style is not set! Use exgui_window::set_style(exgui_wi1ndow_style *)");
-  int b_is_active = (int)(get_elem_flags().is_focused() || get_elem_flags().is_howered());
+  int b_is_active = (int)(get_elem_flags().is_focused() || get_elem_flags().is_hovered());
   /* draw window background */
   nvgBeginPath(p_ctx);
   nvgFillColor(p_ctx, p_style->get_background_color(b_is_active));
