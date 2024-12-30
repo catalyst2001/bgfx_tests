@@ -8,6 +8,8 @@
 #include "bgfx_utils.h"
 #include "imgui/imgui.h"
 #include "camera.h"
+#include <windows.h>
+#include <stdio.h>
 
 namespace
 {
@@ -199,13 +201,18 @@ public:
 	{
 		Args args(_argc, _argv);
 
+		AllocConsole();
+		FILE* oldstream;
+		freopen_s(&oldstream, "conout$", "w", stdout);
+		freopen_s(&oldstream, "conout$", "w", stderr);
+
 		m_width  = _width;
 		m_height = _height;
 		m_debug  = BGFX_DEBUG_TEXT;
 		m_reset  = BGFX_RESET_VSYNC;
 
 		bgfx::Init init;
-		init.type     = args.m_type;
+		init.type     = bgfx::RendererType::Direct3D11;
 		init.vendorId = args.m_pciId;
 		init.platformData.nwh  = entry::getNativeWindowHandle(entry::kDefaultWindowHandle);
 		init.platformData.ndt  = entry::getNativeDisplayHandle();
@@ -213,6 +220,7 @@ public:
 		init.resolution.width  = m_width;
 		init.resolution.height = m_height;
 		init.resolution.reset  = m_reset;
+		
 		bgfx::init(init);
 
 		// Enable m_debug text.
@@ -225,21 +233,10 @@ public:
 		bgfx::setPaletteColor(1, UINT32_C(0x303030ff) );
 
 		// Set geometry pass view clear state.
-		bgfx::setViewClear(kRenderPassGeometry
-				, BGFX_CLEAR_COLOR|BGFX_CLEAR_DEPTH
-				, 1.0f
-				, 0
-				, 1
-				, 0
-				);
+		bgfx::setViewClear(kRenderPassGeometry, BGFX_CLEAR_COLOR|BGFX_CLEAR_DEPTH, 1.0f, 0, 1, 0);
 
 		// Set light pass view clear state.
-		bgfx::setViewClear(kRenderPassLight
-				, BGFX_CLEAR_COLOR|BGFX_CLEAR_DEPTH
-				, 1.0f
-				, 0
-				, 0
-				);
+		bgfx::setViewClear(kRenderPassLight, BGFX_CLEAR_COLOR|BGFX_CLEAR_DEPTH, 1.0f, 0, 0);
 
 		// Create vertex stream declaration.
 		PosNormalTangentTexcoordVertex::init();
@@ -511,6 +508,8 @@ public:
 				||  m_oldUseUav    != m_useUav
 				||  !bgfx::isValid(m_gbuffer) )
 				{
+					printf("test123\n");
+
 					// Recreate variable size render targets when resolution changes.
 					m_oldWidth     = m_width;
 					m_oldHeight    = m_height;

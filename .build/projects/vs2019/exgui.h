@@ -262,13 +262,15 @@ public:
   virtual void               set_clipboard_data_ex(const uint8_t* p_src, size_t size) = 0;
 };
 
+class exgui_widget;
+
 /**
 * GUI element abstract class
 */
 class iexgui_widget
 {
 public:
-  virtual     ~iexgui_widget() = 0;
+  //virtual     ~iexgui_widget() = 0;
   virtual bool on_event(EXGUI_EVENT event, exgui_widget *p_from) = 0;
   virtual void on_draw(NVGcontext* p_ctx) = 0;
   virtual void on_keybd(int sc, EXGUI_KEY vk, EXGUI_KEY_STATE state) = 0;
@@ -294,6 +296,7 @@ protected:
   virtual bool on_event(EXGUI_EVENT event, exgui_widget *p_from) {
     EXGUI_UNUSED(event);
     EXGUI_UNUSED(p_from);
+    return true;
   }
   virtual void on_draw(NVGcontext* p_ctx) {
     EXGUI_UNUSED(p_ctx);
@@ -341,7 +344,7 @@ protected:
   //};
 
   /* perform update root draw cache */
-  inline void root_update() { ((exgui_surface *)m_proot)->rebuild_draw_cache(); }
+  inline void root_update() { /*((exgui_surface *)m_proot)->rebuild_draw_cache();*/ }
 
 public:
   void set_classname(const char* p_clsn) {
@@ -393,7 +396,7 @@ public:
   /* childs */
   inline size_t         get_num_childs() { return m_childs.size(); }
   inline exgui_widget*  get_child(size_t idx) { return m_childs[idx]; }
-  inline const exgui_widget** get_all_childs() { return m_childs.data(); }
+  inline exgui_widget** get_all_childs() { return m_childs.data(); }
   bool                  add_child(exgui_widget* p_child);
   bool                  remove_child(exgui_widget* p_child);
 

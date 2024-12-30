@@ -48,6 +48,7 @@ void exgui_widget::set_parent(exgui_widget* p_parent)
 
 void exgui_surface::event_dispatcher(exgui_widget* p_elem)
 {
+  EXGUI_UNUSED(p_elem);
 }
 
 void exgui_surface::keybd_dispatcher(exgui_widget* p_elem, int sc, EXGUI_KEY vk, EXGUI_KEY_STATE state)
